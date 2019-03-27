@@ -1967,6 +1967,40 @@ describeWithFlags('tensor grad', ALL_ENVS, () => {
     const data = gg(x);
     expectArraysClose(data, [12, 18]);
   });
+
+  it('transpose', () => {
+    const N = 10000;
+    const a = new Float32Array(N * N);
+    for (let i = 0; i < a.length; i++) {
+      a[i]= i % N;
+    }
+    tf.ENV.set('TENSORLIKE_CHECK_SHAPE_CONSISTENCY', false);
+    const res = tf.transpose(tf.tensor(a, [N, N]));
+    const vals = res.dataSync();
+    const lastNRows = 5;
+    for (let i = N-lastNRows; i < N; i++) {
+      const offset = i * N;
+      console.log(vals.slice(offset + N - 5, offset + N));
+    }
+  });
+
+  // tslint:disable-next-line:ban
+  fit('abs', () => {
+    const A = 17000;
+    const B = 5000;
+    const a = new Float32Array(A * B);
+    for (let i = 0; i < a.length; i++) {
+      a[i]= i % 10000;
+    }
+    tf.ENV.set('TENSORLIKE_CHECK_SHAPE_CONSISTENCY', false);
+    const res = tf.abs(tf.tensor(a, [A, B]));
+    const vals = res.dataSync();
+    const lastNRows = 5;
+    for (let i = A-lastNRows; i < A; i++) {
+      const offset = i * B;
+      console.log(vals.slice(offset + B - 5, offset + B));
+    }
+  });
 });
 
 describeWithFlags('tensor.data', ALL_ENVS, () => {
