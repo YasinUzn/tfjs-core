@@ -15,7 +15,9 @@
  * =============================================================================
  */
 
+import {ENV} from './environment';
 import {DataType, DataTypeMap, FlatVector, NumericDataType, RecursiveArray, TensorLike, TypedArray} from './types';
+
 
 /**
  * Shuffles the array in-place using Fisher-Yates algorithm.
@@ -663,4 +665,42 @@ export function assertNonNegativeIntegerDimensions(shape: number[]) {
             `Tensor must have a shape comprised of positive integers but got ` +
             `shape [${shape}].`);
   });
+}
+
+let systemFetch: Function;
+const getSystemFetch = () => {
+  let fetchFunc: Function;
+
+  if (ENV.global.fetch != null) {
+    fetchFunc = ENV.global.fetch;
+  } else {
+    if (ENV.get('IS_NODE')) {
+      // tslint:disable-next-line:no-require-imports
+      fetchFunc = require('node-fetch');
+    } else {
+      throw new Error(`Unable to find fetch polyfill.`);
+    }
+  }
+  return fetchFunc;
+};
+
+/**
+ * Returns a platform-specific implementation of `window.fetch`.
+ *
+ * If `fetch` is defined on the global object (`window`, `process`, etc.),
+ * `tf.util.fetch` returns that function.
+ *
+ * If not, `tf.util.fetch` returns a platform-specific solution.
+ *
+ * ```js
+ * tf.util.fetch('path/to/resource')
+ *  .then(response => {}) // handle response
+ * ```
+ */
+/** @doc {heading: 'Util'} */
+export function fetch(path: string, requestInits?: RequestInit) {
+  if (systemFetch == null) {
+    systemFetch = getSystemFetch();
+  }
+  return systemFetch(path, requestInits);
 }
